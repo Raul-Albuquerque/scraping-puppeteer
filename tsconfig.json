@@ -7,9 +7,17 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "api"
+    "outDir": "./dist",  // Saída dos arquivos compilados
+    "rootDir": "./api",  // Diretório raiz do código fonte
+    "baseUrl": ".",      // Definir a base para os imports relativos
+    "paths": {
+      "*": ["node_modules/*", "api/*"]
+    }
   },
-  "include": ["api/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "api/**/*.ts"  // Incluir todos os arquivos TypeScript dentro de api
+  ],
+  "exclude": [
+    "node_modules"  // Excluir node_modules
+  ]
 }

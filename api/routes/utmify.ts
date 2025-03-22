@@ -1,44 +1,53 @@
+// routes/utmify.ts
+import { Router, Request, Response } from 'express';
 import puppeteerExtra from 'puppeteer-extra';
 import puppeteerExtraPluginStealth from 'puppeteer-extra-plugin-stealth';
 import dotenv from 'dotenv';
-import { Router } from 'express';
-
 import { generateUrlWithProducts } from '../utils/helpers';
 
 dotenv.config();
+
 const router = Router();
 
-const login = process.env.UTM_LOGIN || '';
-let password = process.env.UTM_PASSWORD || '';
-password = password + '#'
-const link = process.env.UTM_LINK || '';
+const login = process.env.UTM_LOGIN;
+let password = process.env.UTM_PASSWORD;
+const link = process.env.UTM_LINK;
 
-// Ativando o plugin stealth
+if (!login || !password || !link) {
+  console.error('Erro: Variáveis de ambiente não configuradas corretamente!');
+  process.exit(1);
+}
+
+password = password + '#';
+
 puppeteerExtra.use(puppeteerExtraPluginStealth());
 
-router.get("/utmify/:day", async (req,res) => {
+router.get("/:day", async (req: Request, res: Response) => {
   const { day } = req.params;
   const adsTableUrl = generateUrlWithProducts({ day });
 
+  let browser;
+
   try {
-    // Inicializando o browser com puppeteer-extra
-    const browser = await puppeteerExtra.launch({ headless: false }); // Define como false para visualizar o processo
+    browser = await puppeteerExtra.launch({ headless: false });
     const page = await browser.newPage();
-    await page.goto("https://app.utmify.com.br/login/");
+    
+    await page.goto(link);
     await page.type('input[name="email"]', login);
     await page.type('input[name="password"]', password);
     await page.keyboard.press("Enter");
+
     await page.waitForNavigation({ waitUntil: "networkidle2" });
-    // await page.screenshot({ path: "login.png" });
+
     await page.goto(adsTableUrl);
     await page.waitForNavigation({ waitUntil: "networkidle2" });
-    // await page.screenshot({ path: "dash.png" });
 
-    await browser.close();
-
+    
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ error: error });  // Certifique-se de enviar o erro como mensagem
   }
 });
+
 
 export default router;
